@@ -1,2 +1,4 @@
-# fapi
-Test API
+fapi
+====
+
+Simple File Handler API for testing purpose
