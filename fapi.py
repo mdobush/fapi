@@ -20,11 +20,11 @@ from tornado.httpclient import HTTPRequest, HTTPClient, HTTPError
 from pkg_resources import resource_filename, Requirement
 
 LOG = logging.getLogger(__name__)
-USERNAME_REGEX = r"^[a-zA-Z]{4,10}$"
-FILENAME_REGEX = r"^[^.][a-z0-9.]{1,16}$"
+USERNAME_REGEX = r"^[a-zA-Z]{5,10}$"
+FILENAME_REGEX = r"^[^.][a-z0-9]{1,14}$"
 
 # Our files will be therer in format: user_filename
-FILES_STORAGE= []
+FILES_STORAGE= {}
 
 class BaseHandler(web.RequestHandler):
     """Base Handler.. what to say more?"""
@@ -54,14 +54,8 @@ class FileCreateHandler(BaseHandler):
             response_body = "User Name not specified or invalid"
             error = 1
 
-        # just for fun.. double encoding issue
-        try:
-            self.file_name = urllib.unquote(self.file_name).encode("utf-8")
-        except:
-            pass
-
         if not error:
-            FILES_STORAGE.append("{0}_{1}".format(self.user_name, self.file_name))
+            FILES_STORAGE["{0}_{1}".format(self.user_name, self.file_name)] = 'ok'
             self.set_status(200)
             response_body = "OK"
 
@@ -83,7 +77,7 @@ class FileListHandler(BaseHandler):
             error = 1
 
         if not error:
-            for user_file in FILES_STORAGE:
+            for user_file in FILES_STORAGE.keys():
                 (uname, fname) = user_file.split("_", 1)
                 if uname.startswith(self.user_name):
                     response_body += "{0}\n".format(fname)
@@ -111,18 +105,12 @@ class FileDeleteHandler(BaseHandler):
             response_body = "User Name not specified or invalid"
             error = 1
 
-        # just for fun.. double encoding issue
-        try:
-            self.file_name = urllib.unquote(self.file_name).encode("utf-8")
-        except:
-            pass
-
         deleted = 0
         if not error:
-            for i in range(len(FILES_STORAGE)):
-                (uname, fname) = FILES_STORAGE[i].split("_", 1)
+            for key in FILES_STORAGE.keys():
+                (uname, fname) = key.split("_", 1)
                 if fname == self.file_name:
-                    del(FILES_STORAGE[i])
+                    del(FILES_STORAGE[key])
                     deleted = 1
                     break
             if deleted:
